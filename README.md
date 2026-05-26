@@ -47,7 +47,7 @@ The sales dashboard allows users to visualize, search and manage all sales recor
 
 ### 6. ➕ Create New Sale
 
-Users can register new sales by selecting a customer, assigning a date and entering the total sale amount.
+Admin can register new sales by selecting a customer, assigning a date and entering the total sale amount.
 
 ![Create Sale](images/CreateSalesFunction.png)
 
@@ -99,10 +99,24 @@ Payment records can be safely removed using confirmation dialogs integrated with
 
 ![Delete Payments](images/DeletePaymentFunction.png)
 
+---
+
+### 13. 📲 WhatsApp Payment Notifications
+
+The system automatically generates WhatsApp notifications after successful payment and sale registration, allowing administrators to instantly inform customers about their payments and updated balances.
+
+![Payment Confirmation](images/ConfirmationPaymentFunction.png)
 
 ---
 
-### 13. 📊 Metrics Dashboard
+### 14. 💬 WhatsApp Integration
+
+Customers receive personalized payment confirmation messages through WhatsApp Web integration, improving communication and payment tracking efficiency.
+
+![WhatsApp Notification](images/ConfirmationWhatsappPaymentFunction.png)
+---
+
+### 15. 📊 Metrics Dashboard
 
 The metrics panel provides visual analytics including total sales, payments collected, pending balances and top debtors using interactive charts.
 
