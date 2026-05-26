@@ -1,0 +1,186 @@
+<script>
+  
+  // Payment table loading
+  function cargarPagos() {
+    google.script.run.withSuccessHandler(res => {
+      const cuerpo = document.getElementById('cuerpoPagos');
+      if (!cuerpo) return;
+      
+      cuerpo.innerHTML = res.map(p => `
+        <tr>
+          <td>${p.nombreU}</td>
+          <td>${p.idPago}</td>
+          <td>${p.fecha}</td>
+          <td class="text-success fw-bold">$ ${new Intl.NumberFormat('de-DE').format(p.total)}</td>
+          <td class="text-center">
+            <div class="btn-group">
+              <button class="btn btn-sm btn-warning me-2" onclick='editarPago(${JSON.stringify(p)})'>✏️</button>
+              <button class="btn btn-sm btn-danger" onclick="eliminarPago(${p.row})">🗑️</button>
+            </div>
+          </td>
+        </tr>`).join('');
+    }).obtenerPagos();
+  }
+
+  // Load pending debts for the selected user
+  function cargarDeudasDelUsuario(idUsuario) {
+    const contenedor = document.getElementById('contenedorDeudas');
+    const lista = document.getElementById('listaVentasCheck');
+    contenedor.style.display = 'block';
+    lista.innerHTML = '<small class="text-muted">Buscando deudas pendientes...</small>';
+
+    google.script.run.withSuccessHandler(ventas => {
+      if (ventas.length === 0) {
+        lista.innerHTML = '<div class="alert alert-light small mb-0">Sin deudas pendientes.</div>';
+        return;
+      }
+
+      lista.innerHTML = ventas.map(v => `
+        <label class="list-group-item d-flex justify-content-between align-items-center py-1">
+          <div class="d-flex align-items-center">
+            <input class="form-check-input me-2 check-venta" type="checkbox" value="${v.idVenta}" 
+                   data-monto="${v.total}" onchange="sumarSeleccionados()">
+            <span class="small">${v.idVenta} (${v.fecha})</span>
+          </div>
+          <span class="fw-bold small">$ ${new Intl.NumberFormat('de-DE').format(v.total)}</span>
+        </label>
+      `).join('');
+    }).obtenerVentasPorUsuario(idUsuario);
+  }
+
+  function sumarSeleccionados() {
+    let total = 0;
+    document.querySelectorAll('.check-venta:checked').forEach(c => {
+      total += parseFloat(c.dataset.monto);
+    });
+    document.getElementById('totalSeleccionado').innerText = "$ " + new Intl.NumberFormat('de-DE').format(total);
+
+    // Use the selected debt total as the default payment amount
+    document.getElementById('montoPago').value = total;
+  }
+
+  function seleccionarTodoVentas() {
+    document.querySelectorAll('.check-venta').forEach(c => c.checked = true);
+    sumarSeleccionados();
+  }
+
+  // Save or update a reconciled payment
+  function guardarPago() {
+    const ventasMarcadas = Array.from(document.querySelectorAll('.check-venta:checked')).map(c => c.value);
+    
+    // Prepare the payment amount for server-side processing
+    const montoInput = document.getElementById('montoPago').value;
+    const montoParaServidor = montoInput.replace(/[$. ]/g, '').trim();
+    const montoNumerico = Number(montoParaServidor);
+
+    // Calculate the total amount selected from pending debts
+    let totalSeleccionado = 0;
+    document.querySelectorAll('.check-venta:checked').forEach(c => {
+      totalSeleccionado += Number(c.dataset.monto) || 0;
+    });
+
+    // Prevent payments greater than the selected debt amount
+    if (ventasMarcadas.length > 0 && montoNumerico > totalSeleccionado) {
+      return Swal.fire(
+        "Monto incorrecto",
+        "El pago no puede ser mayor al total seleccionado. Total seleccionado: $ " +
+        new Intl.NumberFormat('de-DE').format(totalSeleccionado),
+        "warning"
+      );
+    }
+
+    const datos = {
+      row: document.getElementById('inputRowPago').value,
+      idPago: document.getElementById('idPagoHidden').value,
+      idUsuario: document.getElementById('idUsuarioPago').value,
+      fecha: document.getElementById('fechaPago').value,
+      total: montoParaServidor,
+      ventasAfectadas: ventasMarcadas 
+    };
+
+    if (!datos.idUsuario || !datos.total) {
+      return Swal.fire("Error", "Selecciona un usuario y un monto válido", "error");
+    }
+
+    mostrarCargando("Procesando pago y saldos...");
+
+    google.script.run.withSuccessHandler(() => {
+      modalPago.hide();
+      cargarPagos();
+      
+      google.script.run.withSuccessHandler(info => {
+        const montoLimpio = datos.total.toString().replace(/[$.]/g, '').trim();
+        const msg = "Hola " + info.nombre + ", ya registre tu pago de $" + montoLimpio;
+        const urlWa = "https://wa.me/57" + info.celular + "?text=" + encodeURIComponent(msg);
+        
+        Swal.fire({
+          icon: 'success',
+          title: '¡Pago y Ajuste Realizado!',
+          html: `<div class="mt-3"><a href="${urlWa}" target="_blank" class="btn btn-success w-100">📩 Informar por WhatsApp</a></div>`
+        });
+      }).obtenerHistorialMensaje(datos.idUsuario);
+    }).procesarPagoConciliado(datos); 
+  }
+
+  function editarPago(p) {
+    document.getElementById('inputRowPago').value = p.row;
+    document.getElementById('idPagoHidden').value = p.idPago;
+    document.getElementById('idUsuarioPago').value = p.idUsuario;
+    document.getElementById('buscarUPago').value = p.nombreU;
+    document.getElementById('fechaPago').value = p.fecha;
+    document.getElementById('montoPago').value = p.total;
+
+    // Hide debt selection during payment editing
+    document.getElementById('contenedorDeudas').style.display = 'none';
+    modalPago.show();
+  }
+
+  function eliminarPago(row) {
+    Swal.fire({ 
+      title: '¿Anular pago?', 
+      text: "Esta acción no se puede deshacer",
+      icon: 'warning', 
+      showCancelButton: true
+    }).then(r => {
+      if(r.isConfirmed) { 
+        mostrarCargando("Anulando..."); 
+        google.script.run.withSuccessHandler(() => { 
+          cargarPagos(); 
+          Swal.fire("Eliminado", "Pago anulado correctamente", "success"); 
+        }).desactivarPago(row); 
+      }
+    });
+  }
+
+  function filtrarTablaPagos() {
+    const input = document.getElementById("buscadorPagos");
+    const filtro = input.value.toLowerCase();
+    const tabla = document.getElementById("cuerpoPagos");
+    const filas = tabla.getElementsByTagName("tr");
+
+    for (let i = 0; i < filas.length; i++) {
+      const textoFila = filas[i].textContent.toLowerCase();
+      filas[i].style.display = textoFila.includes(filtro) ? "" : "none";
+    }
+  }
+
+  function prepararNuevoPago() {
+    document.getElementById('inputRowPago').value = "";
+    document.getElementById('idPagoHidden').value = "";
+    document.getElementById('idUsuarioPago').value = "";
+    document.getElementById('buscarUPago').value = "";
+    document.getElementById('montoPago').value = "";
+    document.getElementById('fechaPago').value = new Date().toISOString().split('T')[0];
+    document.getElementById('contenedorDeudas').style.display = 'none';
+    document.getElementById('listaVentasCheck').innerHTML = "";
+    document.getElementById('totalSeleccionado').innerText = "$ 0";
+
+    const sugerencias = document.getElementById('sugerenciasPago');
+    if (sugerencias) sugerencias.innerHTML = "";
+
+    document.querySelectorAll('.check-venta').forEach(c => c.checked = false);
+
+    modalPago.show();
+  }
+
+</script>

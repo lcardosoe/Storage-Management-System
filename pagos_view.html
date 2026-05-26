@@ -1,0 +1,74 @@
+<div class="container bg-white p-4 rounded shadow mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: #333;">Registro de Pagos</h2>
+    <button class="btn btn-success" onclick="prepararNuevoPago()">+ Nuevo Pago</button>
+  </div>
+  
+  <input type="text" id="buscadorPagos" class="form-control mb-3" placeholder="🔍 Buscar pago..." onkeyup="filtrarTabla()">
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-dark">
+        <tr>
+          <th>Usuario</th>
+          <th>ID Pago</th>
+          <th>Fecha</th>
+          <th>Monto</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="cuerpoPagos"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal fade" id="modalPago" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalle del Pago</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="inputRowPago">
+        <input type="hidden" id="idUsuarioPago">
+        <input type="hidden" id="idPagoHidden">
+        
+        <div class="mb-3 position-relative">
+          <label class="form-label">Buscar Usuario</label>
+          <input type="text" id="buscarUPago" class="form-control" 
+                onkeyup="buscarUsuarioUniversal(this.value, 'sugerenciasPago', 'idUsuarioPago', 'buscarUPago')">
+          <div id="sugerenciasPago" class="list-group sugerencias"></div>
+        </div>
+
+        <div id="contenedorDeudas" class="mt-3 p-2 border rounded bg-light" style="display:none;">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Ventas Pendientes</h6>
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="seleccionarTodoVentas()">Seleccionar Todo</button>
+          </div>
+          <div id="listaVentasCheck" class="list-group mb-2" style="max-height: 150px; overflow-y: auto;">
+            </div>
+          <div class="p-2 bg-white border-top">
+            <small class="text-muted">Total Deuda Seleccionada:</small>
+            <span id="totalSeleccionado" class="fw-bold text-dark">$ 0</span>
+          </div>
+        </div>
+
+        <div class="mb-3 mt-3">
+          <label class="form-label">Fecha</label>
+          <input type="date" id="fechaPago" class="form-control">
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Monto del Pago</label>
+          <input type="text" id="montoPago" class="form-control" onkeyup="formatearMoneda(this)">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarPago()">Guardar Pago</button>
+      </div>
+    </div>
+  </div>
+</div>
+

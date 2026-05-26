@@ -1,0 +1,69 @@
+<div class="container mt-4">
+  <h2 class="mb-4">Panel de Métricas</h2>
+
+  <div class="card shadow-sm p-3 mb-4 bg-light">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="small fw-bold">Desde:</label>
+        <input type="date" id="fechaInicioFiltro" class="form-control form-control-sm">
+      </div>
+      <div class="col-md-3">
+        <label class="small fw-bold">Hasta:</label>
+        <input type="date" id="fechaFinFiltro" class="form-control form-control-sm">
+      </div>
+      <div class="col-md-auto">
+        <button class="btn btn-sm btn-primary px-4" onclick="cambiarPeriodo()">🔍 Buscar</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="limpiarFiltro()">🧹 Limpiar</button>
+      </div>
+    </div>
+  </div>
+
+  <h5 class="text-secondary mb-3" id="tituloBalance">Balance Total Histórico</h5>
+
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card bg-primary text-white shadow-sm border-0">
+        <div class="card-body">
+          <h6 class="small">Ventas del Periodo</h6>
+          <h3 id="txtTotalVentas" class="mb-0">$ 0</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-success text-white shadow-sm border-0">
+        <div class="card-body">
+          <h6 class="small">Cobrado del Periodo</h6>
+          <h3 id="txtTotalPagos" class="mb-0">$ 0</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-danger text-white shadow-sm border-0">
+        <div class="card-body">
+          <h6 class="small">Diferencia (Pendiente)</h6>
+          <h3 id="txtTotalDeuda" class="mb-0">$ 0</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-md-5 mb-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <div style="height: 220px;"><canvas id="chartBalance"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-7 mb-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-white py-2">
+          <h6 class="mb-0 fw-bold text-dark">Top 5 Deudores (General)</h6>
+        </div>
+        <div class="card-body p-0">
+          <ul class="list-group list-group-flush" id="listaTopDeudores"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

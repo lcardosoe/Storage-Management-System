@@ -1,0 +1,59 @@
+<div class="container bg-white p-4 rounded shadow mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Registro de Ventas</h2>
+    <button class="btn btn-success" onclick="document.getElementById('inputRowVenta').value=''; document.getElementById('idUsuarioHidden').value=''; document.getElementById('inputBuscarUsuario').value=''; document.getElementById('fechaVenta').valueAsDate=new Date(); document.getElementById('totalVenta').value=''; modalVenta.show();">+ Nueva Venta</button>
+  </div>
+  
+  <div class="mb-3">
+    <input type="text" id="buscarVentaTabla" class="form-control" onkeyup="filtrarTablaVentas()" placeholder="🔍 Buscar ventas...">
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Usuario</th><th>ID Venta</th><th>Fecha</th><th>Total</th><th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="cuerpoVentas"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal fade" id="modalVenta" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title">Datos de la Venta</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="inputRowVenta">
+        <input type="hidden" id="idVentaHidden">
+        <input type="hidden" id="idUsuarioHidden">
+        
+        <div class="mb-3 position-relative">
+          <label class="form-label">Buscar Usuario (Nombre)</label>
+          <input type="text" id="inputBuscarUsuario" class="form-control" onkeyup="buscarUsuarioUniversal(this.value, 'listaSugerencias', 'idUsuarioHidden', 'inputBuscarUsuario')">
+          <div id="listaSugerencias" class="list-group sugerencias"></div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Fecha</label>
+          <input type="date" id="fechaVenta" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Total Venta</label>          
+          <input type="text" id="totalVenta" class="form-control" 
+                placeholder="$ 0" 
+                onkeyup="formatearMoneda(this)" 
+                inputmode="numeric">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarVenta()">Guardar Venta</button>
+      </div>
+    </div>
+  </div>
+</div>

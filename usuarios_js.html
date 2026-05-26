@@ -1,0 +1,140 @@
+<script>
+  // User management logic
+
+  function cargarUsuarios() {
+    google.script.run.withSuccessHandler(res => {
+      renderizarTablaUsuarios(res);
+    }).obtenerUsuarios();
+  }
+
+  function renderizarTablaUsuarios(usuarios) {
+    const cuerpo = document.getElementById('cuerpoTabla');
+    if (!cuerpo) return;
+
+    let filasHtml = "";
+    usuarios.forEach(u => {
+      // Apply visual status based on outstanding balance
+      let colorClase = "text-success";
+      if (u.totalDeuda > 75000) {
+        colorClase = "text-danger fw-bold";
+      } else if (u.totalDeuda >= 60000) {
+        colorClase = "text-warning fw-bold";
+      }
+
+      const deudaFmt = "$ " + new Intl.NumberFormat('de-DE').format(u.totalDeuda || 0);
+
+      filasHtml += `
+        <tr>
+          <td>${u.id}</td>
+          <td>${u.nombre}</td>
+          <td>${u.apellido}</td>
+          <td>${u.celular}</td>
+          <td><span class="${colorClase}">${deudaFmt}</span></td>
+          <td class="text-center">
+            <div class="btn-group">
+              <button class="btn btn-sm btn-warning me-2" onclick='editarUsuario(${JSON.stringify(u)})'>✏️</button>
+              <button class="btn btn-sm btn-danger" onclick="confirmarEliminarUsuario(${u.row})">🗑️</button>
+            </div>
+          </td>
+        </tr>`;
+    });
+    cuerpo.innerHTML = filasHtml;
+  }
+
+  function guardar() {
+    const datos = {
+      row: document.getElementById('inputRow').value,
+      id: document.getElementById('id').value,
+      nombre: document.getElementById('nombre').value,
+      apellido: document.getElementById('apellido').value,
+      celular: document.getElementById('celular').value
+    };
+
+    if (!datos.nombre || !datos.celular) {
+      return Swal.fire("Error", "Nombre y Celular son obligatorios", "error");
+    }
+
+    mostrarCargando("Guardando usuario...");
+    
+    google.script.run
+      .withSuccessHandler(() => {
+        modal.hide();
+        limpiarFormularioUsuario();
+        cargarUsuarios();
+        Swal.fire("¡Éxito!", "Usuario procesado correctamente", "success");
+      })
+      .withFailureHandler(err => {
+        Swal.fire("Error", err.message, "error");
+      })
+      .guardarUsuario(datos);
+  }
+
+  function editarUsuario(u) {
+    document.getElementById('inputRow').value = u.row;
+    document.getElementById('id').value = u.id;
+    document.getElementById('nombre').value = u.nombre;
+    document.getElementById('apellido').value = u.apellido;
+    document.getElementById('celular').value = u.celular;
+    modal.show();
+  }
+
+  function confirmarEliminarUsuario(row) {
+    Swal.fire({
+      title: '¿Desactivar usuario?',
+      text: "El usuario no se borrará, pero ya no aparecerá en la lista activa.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, desactivar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        mostrarCargando("Desactivando...");
+        google.script.run.withSuccessHandler(() => {
+          cargarUsuarios();
+          Swal.fire("Desactivado", "El usuario ahora está inactivo.", "success");
+        }).desactivarUsuario(row);
+      }
+    });
+  }
+
+  function limpiarFormularioUsuario() {
+    document.getElementById('inputRow').value = "";
+    document.getElementById('id').value = "";
+    document.getElementById('nombre').value = "";
+    document.getElementById('apellido').value = "";
+    document.getElementById('celular').value = "";
+  }
+
+  // Format mobile numbers as 000-000-0000
+  function formatearCelular(input) {
+    let num = input.value.replace(/\D/g, '');
+    if (num.length > 10) num = num.substring(0, 10);
+    
+    let formateado = "";
+    if (num.length > 0) formateado += num.substring(0, 3);
+    if (num.length > 3) formateado += "-" + num.substring(3, 6);
+    if (num.length > 6) formateado += "-" + num.substring(6, 10);
+    
+    input.value = formateado;
+  }
+
+  function prepararNuevoUsuario() {
+    limpiarFormularioUsuario();
+    document.getElementById('inputRow').value = "";
+    modal.show();
+  }
+
+  function filtrarTablaUsuarios() {
+    const input = document.getElementById("buscarUsuario");
+    const filtro = input.value.toLowerCase();
+    const tabla = document.getElementById("cuerpoTabla");
+    const filas = tabla.getElementsByTagName("tr");
+
+    for (let i = 0; i < filas.length; i++) {
+      const textoFila = filas[i].textContent.toLowerCase();
+      filas[i].style.display = textoFila.includes(filtro) ? "" : "none";
+    }
+  }
+</script>

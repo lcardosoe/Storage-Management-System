@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; }
+    .navbar { box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .sugerencias { position: absolute; z-index: 1055; width: 100%; top: 100%; }
+  </style>
+
+  
+
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#">Storage Management System</a>
+      <div class="d-flex">
+        <button class="btn btn-outline-light me-2" onclick="mostrarContent('usuarios_view')">Usuarios</button>
+        <button class="btn btn-outline-light me-2" onclick="mostrarContent('ventas_view')">Ventas</button>
+        <button class="btn btn-outline-light me-2" onclick="mostrarContent('pagos_view')">Pagos</button>
+        <button class="btn btn-outline-light me-2" onclick="mostrarContent('metricas_view')">Metricas</button>
+      </div>
+    </div>
+  </nav>
+
+  <div id="contenidoPrincipal" class="container my-4">
+    <div class="text-center mt-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-2">Cargando sistema...</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+  // Global navigation and modal references
+  let modal, modalVenta, modalPago;
+  let listaUsuariosRef = [];
+
+  window.onload = () => mostrarContent('usuarios_view');
+
+  function mostrarContent(pag) {
+    console.log("Cargando vista:", pag);
+
+    google.script.run.withSuccessHandler(function(html) {
+      document.getElementById('contenidoPrincipal').innerHTML = html;
+
+      try {
+        if(pag === 'usuarios_view') {
+          modal = new bootstrap.Modal(document.getElementById('modalUsuario'));
+          cargarUsuarios();
+        } else if(pag === 'ventas_view') {
+          modalVenta = new bootstrap.Modal(document.getElementById('modalVenta'));
+          cargarVentas();
+          google.script.run.withSuccessHandler(res => { listaUsuariosRef = res; }).obtenerUsuarios();
+        } else if(pag === 'pagos_view') {
+          modalPago = new bootstrap.Modal(document.getElementById('modalPago'));
+          cargarPagos();
+          google.script.run.withSuccessHandler(res => { listaUsuariosRef = res; }).obtenerUsuarios();
+        } else if(pag === 'metricas_view') {
+          cargarMetricas();
+        }
+      } catch(e) {
+        console.error("Error inicializando modal:", e);
+      }
+    }).incluirArchivo(pag);
+  }
+
+  function mostrarCargando(t = "Procesando...") {
+    Swal.fire({ title: t, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+  }
+
+  // Shared user search handler
+  function buscarUsuarioUniversal(val, idContenedor, destinoId, destinoNombre) {
+    const div = document.getElementById(idContenedor);
+    if (val.length < 2) { div.innerHTML = ""; return; }
+
+    const filtrados = listaUsuariosRef.filter(u => 
+      (u.nombre + " " + u.apellido).toLowerCase().includes(val.toLowerCase())
+    );
+
+    div.innerHTML = filtrados.map(u => `
+      <button type="button" class="list-group-item list-group-item-action" 
+        onclick="seleccionarUniversal('${u.id}', '${u.nombre} ${u.apellido}', '${idContenedor}', '${destinoId}', '${destinoNombre}')">
+        ${u.nombre} ${u.apellido}
+      </button>
+    `).join('');
+  }
+
+  function seleccionarUniversal(id, nombre, idContenedor, destinoId, destinoNombre) {
+    document.getElementById(destinoId).value = id;
+    document.getElementById(destinoNombre).value = nombre;
+    document.getElementById(idContenedor).innerHTML = "";
+
+    // Load pending debts when the selected user belongs to the payments form
+    if (destinoId === 'idUsuarioPago') {
+      cargarDeudasDelUsuario(id); 
+    }
+  }
+
+  function formatearMoneda(input) {
+    let v = input.value.replace(/\D/g, "");
+    if (v !== "") input.value = "$ " + new Intl.NumberFormat('de-DE').format(v);
+  }
+</script>
+
+<?!= incluirArchivo('usuarios_js'); ?>
+<?!= incluirArchivo('ventas_js'); ?>
+<?!= incluirArchivo('pagos_js'); ?>
+<?!= incluirArchivo('metricas_js'); ?>
+
+</body>
+</html>

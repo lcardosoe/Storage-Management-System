@@ -1,0 +1,90 @@
+<script>
+  let chartBalanceInstance = null; // Variable para controlar la gráfica
+
+  /**
+   * FUNCIÓN PRINCIPAL: CARGAR MÉTRICAS
+   * Se llama al entrar a la vista o al filtrar
+   */
+  function cargarMetricas(inicio = null, fin = null) {
+    mostrarCargando("Calculando balance...");
+    
+    google.script.run.withSuccessHandler(res => {
+      Swal.close(); // Cerramos el cargando
+      
+      // 1. Actualizar Título
+      document.getElementById('tituloBalance').innerText = res.tituloGrafica;
+
+      // 2. Llenar Tarjetas de Resumen
+      const fmt = new Intl.NumberFormat('de-DE');
+      document.getElementById('txtTotalVentas').innerText = "$ " + fmt.format(res.totalVentas);
+      document.getElementById('txtTotalPagos').innerText = "$ " + fmt.format(res.totalPagos);
+      document.getElementById('txtTotalDeuda').innerText = "$ " + fmt.format(res.saldoPendiente);
+
+      // 3. Generar Lista de Top Deudores
+      const lista = document.getElementById('listaTopDeudores');
+      lista.innerHTML = res.topDeudores.map(u => `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <span class="fw-bold">${u.nombre} ${u.apellido}</span><br>
+            <small class="text-muted">Cel: ${u.celular}</small>
+          </div>
+          <span class="badge bg-danger rounded-pill">$ ${fmt.format(u.totalDeuda)}</span>
+        </li>
+      `).join('');
+
+      // 4. Dibujar Gráfica
+      renderizarGrafica(res.totalVentas, res.totalPagos);
+      
+    }).obtenerMetricas(inicio, fin);
+  }
+
+  /**
+   * DIBUJAR LA GRÁFICA DE BALANCE (Pie Chart)
+   */
+  function renderizarGrafica(ventas, pagos) {
+    const ctx = document.getElementById('chartBalance').getContext('2d');
+
+    // Si ya existe una gráfica, la destruimos antes de crear la nueva
+    if (chartBalanceInstance) {
+      chartBalanceInstance.destroy();
+    }
+
+    chartBalanceInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Vendido', 'Cobrado'],
+        datasets: [{
+          data: [ventas, pagos],
+          backgroundColor: ['#0d6efd', '#198754'],
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' }
+        }
+      }
+    });
+  }
+
+  /**
+   * ACCIONES DE LOS BOTONES DE FILTRO
+   */
+  function cambiarPeriodo() {
+    const inicio = document.getElementById('fechaInicioFiltro').value;
+    const fin = document.getElementById('fechaFinFiltro').value;
+
+    if (!inicio || !fin) {
+      return Swal.fire("Atención", "Selecciona ambas fechas para filtrar", "info");
+    }
+    cargarMetricas(inicio, fin);
+  }
+
+  function limpiarFiltro() {
+    document.getElementById('fechaInicioFiltro').value = "";
+    document.getElementById('fechaFinFiltro').value = "";
+    cargarMetricas(); // Carga el histórico total
+  }
+</script>

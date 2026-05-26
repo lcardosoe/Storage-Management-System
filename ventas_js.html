@@ -1,0 +1,88 @@
+<script>
+
+  // Sales management logic
+  function cargarVentas() {
+    google.script.run.withSuccessHandler(res => {
+      const cuerpo = document.getElementById('cuerpoVentas');
+      if(!cuerpo) return;
+      cuerpo.innerHTML = res.map(v => `
+        <tr>
+          <td>${v.nombreU}</td>
+          <td>${v.idVenta}</td>
+          <td>${v.fecha}</td>
+          <td>$ ${new Intl.NumberFormat('de-DE').format(v.total)}</td>
+          <td class="text-center">
+            <button class="btn btn-sm btn-warning" onclick='editarVenta(${JSON.stringify(v)})'>✏️</button>
+            <button class="btn btn-sm btn-danger" onclick="eliminarVenta(${v.row})">🗑️</button>
+          </td>
+        </tr>`).join('');
+    }).obtenerVentas();
+  }
+
+  function guardarVenta() {
+    const datos = {
+      row: document.getElementById('inputRowVenta').value,
+      idUsuario: document.getElementById('idUsuarioHidden').value,
+      idVenta: document.getElementById('idVentaHidden').value,
+      fecha: document.getElementById('fechaVenta').value,
+      total: document.getElementById('totalVenta').value
+    };
+    if (!datos.idUsuario || !datos.total) return Swal.fire("Error", "Faltan datos", "error");
+
+    mostrarCargando("Guardando...");
+    google.script.run.withSuccessHandler(() => {
+      modalVenta.hide();
+      cargarVentas();
+
+      // Generate the WhatsApp summary after saving the sale
+      google.script.run.withSuccessHandler(info => {
+        const msg = "Hola " + info.nombre + ", resumen de compras:\n" + info.detalle + "\n*Total: $" + info.deudaTotal + "*";
+        const urlWa = "https://wa.me/57" + info.celular + "?text=" + encodeURIComponent(msg);
+        Swal.fire({
+          icon: 'success',
+          title: 'Venta Guardada',
+          html: `<a href="${urlWa}" target="_blank" class="btn btn-success w-100">📩 Enviar WhatsApp</a>`
+        });
+      }).obtenerHistorialMensaje(datos.idUsuario);
+    }).guardarVenta(datos);
+  }
+
+  function editarVenta(v) {
+    document.getElementById('inputRowVenta').value = v.row;
+    document.getElementById('idUsuarioHidden').value = v.idUsuario;
+    document.getElementById('idVentaHidden').value = v.idVenta;
+    document.getElementById('inputBuscarUsuario').value = v.nombreU;
+    document.getElementById('fechaVenta').value = v.fecha;
+    document.getElementById('totalVenta').value = v.total;
+    modalVenta.show();
+  }
+
+  function eliminarVenta(row) {
+    Swal.fire({ title: '¿Eliminar?', icon: 'warning', showCancelButton: true }).then(r => {
+      if(r.isConfirmed) {
+        mostrarCargando();
+        google.script.run.withSuccessHandler(() => { cargarVentas(); Swal.fire("Eliminado", "", "success"); }).desactivarVenta(row);
+      }
+    });
+  }
+
+  function filtrarTablaVentas() {
+    const input = document.getElementById("buscarVentaTabla");
+    const filtro = input.value.toLowerCase();
+    const tabla = document.getElementById("cuerpoVentas");
+    const filas = tabla.getElementsByTagName("tr");
+
+    for (let i = 0; i < filas.length; i++) {
+      // Search across all visible values in the row
+      const textoFila = filas[i].textContent.toLowerCase();
+      
+      // Show matching rows and hide the rest
+      if (textoFila.includes(filtro)) {
+        filas[i].style.display = "";
+      } else {
+        filas[i].style.display = "none";
+      }
+    }
+  }
+
+</script>
