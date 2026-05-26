@@ -2,6 +2,115 @@
 
 A web-based storage, sales, payments and debt tracking system developed using Google Apps Script, HTML, Bootstrap and Google Sheets.
 
+## 📷 Screenshots
+
+### 1. 🏠 Main Dashboard
+
+The main interface provides quick navigation between users, sales, payments and metrics modules through a clean and responsive dashboard.
+
+![Main Dashboard](images/home.png)
+
+---
+
+### 2. 👥 User Management Module
+
+This module allows administrators to create, edit and manage users while tracking outstanding debts.
+
+![User Management](images/CreateUsersFunction.png)
+
+
+---
+
+### 3. ✏️ Update User Information
+
+The system allows administrators to edit user details including names, phone numbers and account information.
+
+![Update User](images/UpdateUsersFunction.png)
+
+---
+
+### 4. 🗑️ Disable Users Confirmation
+
+Instead of permanently deleting users, the system performs soft deletion by disabling inactive accounts.
+
+![Disable Users](images/DeleteUsersFunction.png)
+
+---
+
+### 5. 💰 Sales Management Dashboard
+
+The sales dashboard allows users to visualize, search and manage all sales records in a responsive table interface.
+
+![Sales Dashboard](images/sales.png)
+
+---
+
+### 6. ➕ Create New Sale
+
+Users can register new sales by selecting a customer, assigning a date and entering the total sale amount.
+
+![Create Sale](images/CreateSalesFunction.png)
+
+---
+
+### 7. ✏️ Update Sales Information
+
+Sales records can be modified using an editable modal interface connected to the Google Sheets database.
+
+![Update Sales](images/UpdateSalesFunction.png)
+
+---
+
+### 8. 🗑️ Delete Sales Confirmation
+
+The system includes confirmation alerts before deleting sales records to prevent accidental actions.
+
+![Delete Sales](images/DeleteSalesFunction.png)
+
+---
+
+### 9. 💳 Payments Management Dashboard
+
+The payments module displays all registered payments with filtering, editing and deletion functionalities.
+
+![Payments Dashboard](images/payments.png)
+
+---
+
+### 10. ➕ Create New Payment
+
+The payment module allows debt reconciliation by selecting pending sales and registering customer payments.
+
+![Create Payment](images/CreatePaymentsFunction.png)
+
+---
+
+### 11. ✏️ Update Payment Information
+
+Existing payments can be updated through a modal form with customer selection, payment date and amount editing.
+
+![Update Payment](images/UpdatePaymentFunction.png)
+
+---
+
+### 12. 🗑️ Delete Payments Confirmation
+
+Payment records can be safely removed using confirmation dialogs integrated with SweetAlert2.
+
+![Delete Payments](images/DeletePaymentFunction.png)
+
+
+---
+
+### 13. 📊 Metrics Dashboard
+
+The metrics panel provides visual analytics including total sales, payments collected, pending balances and top debtors using interactive charts.
+
+![Metrics Dashboard](images/metrics.png)
+
+
+
+
 ---
 
 ## 📌 Features
